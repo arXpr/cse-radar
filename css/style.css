@@ -825,3 +825,70 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
   .company-grid { grid-template-columns: 1fr; }
   .cr-stats { gap: 0.75rem; }
 }
+
+@media (max-width: 600px) {
+  body { font-size: 14px; }
+
+  main { padding: 1rem 0.75rem; }
+
+  .navbar {
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem 0;
+  }
+  .nav-brand { font-size: 1rem; }
+  .nav-auth { margin-left: auto; }
+  .nav-auth .btn-ghost { padding: 6px 10px; font-size: 0.8rem; }
+  .admin-badge { display: none; }
+  .nav-links {
+    order: 3;
+    flex: 0 0 100%;
+    overflow-x: auto;
+    padding-bottom: 0.6rem;
+    scrollbar-width: none;
+  }
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-link { flex: 0 0 auto; padding: 6px 10px; }
+
+  .hero-section { padding-top: 1.25rem; margin-bottom: 1.5rem; }
+  .hero-title .hero-sub { margin-bottom: 1.25rem; }
+  .stat-grid { gap: 0.75rem; }
+  .stat-card { padding: 1rem; }
+  .stat-num { font-size: 1.6rem; }
+  .section { margin-bottom: 1.75rem; }
+
+  .section-header { align-items: flex-start; }
+  .filter-row { width: 100%; }
+  .input-search { width: 100%; flex: 1 1 100%; }
+  .input-select { flex: 1; }
+
+  .company-card { padding: 1rem; }
+  .company-row { align-items: flex-start; flex-wrap: wrap; padding: 1rem; }
+  .cr-info { min-width: 0; }
+  .cr-stats { width: 100%; justify-content: space-between; padding-left: 3.5rem; }
+
+  .detail-header { gap: 0.75rem; }
+  .detail-company-name { flex-basis: 100%; order: 3; }
+  #admin-edit-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .funnel-container { padding: 1rem; margin-left: -0.75rem; margin-right: -0.75rem; border-radius: 0; }
+  .round-header { align-items: flex-start; gap: 0.5rem; padding: 0.75rem 1rem; }
+  .round-student-grid { grid-template-columns: 1fr; padding: 0.75rem 1rem; }
+
+  .lb-row { grid-template-columns: 36px minmax(0, 1fr) auto; gap: 0.5rem; padding: 0.75rem; }
+  .lb-offers { justify-content: flex-end; }
+  .lb-chips { grid-column: 2 / -1; justify-content: flex-start; }
+
+  .modal { align-items: flex-end; padding: 0; }
+  .modal-box, .modal-box.wide {
+    max-width: none;
+    max-height: 88vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 1.25rem;
+  }
+  .modal-actions { gap: 0.5rem; }
+  .modal-actions button { flex: 1; padding-left: 10px; padding-right: 10px; }
+  .rs-item { gap: 0.5rem; padding: 8px; }
+  .rs-enroll { display: none; }
+}
