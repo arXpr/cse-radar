@@ -24,6 +24,7 @@
   </div>
   <div class="nav-links">
     <a href="#" class="nav-link active" data-page="dashboard">Dashboard</a>
+    <a href="#" class="nav-link" data-page="mystatus">My Status 🎯</a>
     <a href="#" class="nav-link" data-page="companies">Companies</a>
     <a href="#" class="nav-link" data-page="leaderboard">Leaderboard</a>
   </div>
@@ -69,6 +70,17 @@
           <div class="stat-num accent" id="stat-batch">124</div>
           <div class="stat-label">CSE Students</div>
         </div>
+      </div>
+    </section>
+
+    <!-- Demographic Insights (Girls vs Boys) -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Demographic Insights 📊</h2>
+        <span class="section-pill">Girls vs Boys Stats</span>
+      </div>
+      <div class="demographic-grid" id="demographic-widget">
+        <!-- populated dynamically by JS -->
       </div>
     </section>
 
@@ -146,6 +158,56 @@
         <!-- Populated by JS -->
       </div>
     </section>
+  </div>
+
+  <!-- ── PAGE: MY STATUS (PERSONALIZED TIMELINE) ── -->
+  <div id="page-mystatus" class="page">
+
+    <section class="mystatus-hero">
+      <div class="mystatus-search-card">
+        <div class="mystatus-header">
+          <h2>My Status Timeline 🎯</h2>
+          <p>Track your personal placement & internship round progress</p>
+        </div>
+        <div class="search-input-wrapper">
+          <input type="text" id="mystatus-search-input" placeholder="Enter Enrollment ID (e.g. BT24CSE123)..." autocomplete="off" />
+          <button id="mystatus-search-btn" class="btn-primary">View Status</button>
+          <div id="mystatus-autocomplete" class="autocomplete-list hidden"></div>
+        </div>
+        <div class="sample-enrolls">
+          <span>Quick Try:</span>
+          <button class="sample-chip" data-enroll="BT24CSE123">BT24CSE123 (Kartik)</button>
+          <button class="sample-chip" data-enroll="BT24CSE037">BT24CSE037 (Prathibha)</button>
+          <button class="sample-chip" data-enroll="BT24CSE125">BT24CSE125 (Tvisha)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Student Profile Banner & Metrics -->
+    <section id="mystatus-profile-section" class="section hidden">
+      <div id="mystatus-profile-card" class="profile-card">
+        <!-- populated dynamically -->
+      </div>
+    </section>
+
+    <!-- Personalized Vertical Timeline -->
+    <section id="mystatus-timeline-section" class="section hidden">
+      <div class="section-header">
+        <h2>Company Milestones</h2>
+        <span class="section-pill" id="timeline-count-pill">0 active drives</span>
+      </div>
+      <div id="mystatus-timeline" class="timeline-container">
+        <!-- populated dynamically -->
+      </div>
+    </section>
+
+    <!-- Initial / Empty Search State -->
+    <div id="mystatus-empty-state" class="empty-state mystatus-empty">
+      <div class="empty-icon">🔍</div>
+      <h3>Enter Your Enrollment ID</h3>
+      <p class="empty-sub">Search your Enrollment ID above to unlock your personalized application timeline & shortlist tracker.</p>
+    </div>
+
   </div>
 
 </main>

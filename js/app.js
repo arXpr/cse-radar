@@ -24,6 +24,7 @@ function navigate(page) {
   if (navEl) navEl.classList.add('active');
 
   if (page === 'leaderboard') renderLeaderboard();
+  if (page === 'mystatus') renderMyStatusFromInput();
   if (page === 'companies') {
     $('company-detail').classList.add('hidden');
     $('company-list').classList.remove('hidden');
@@ -78,6 +79,7 @@ function loadCompanies() {
     companies = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     renderDashboard();
     renderCompanyList();
+    if ($('page-mystatus')?.classList.contains('active')) renderMyStatusFromInput();
     // if detail page open, refresh it
     if (currentCompany) {
       const updated = companies.find(c => c.id === currentCompany.id);
@@ -102,6 +104,8 @@ function renderDashboard() {
   $('stat-offers').textContent    = totalOffers;
   $('stat-oa').textContent        = totalOaCleared;
   $('company-count-pill').textContent = `${companies.length} tracked`;
+
+  renderDemographics();
 
   const grid = $('company-grid');
   if (companies.length === 0) {
@@ -596,5 +600,363 @@ function escapeAttr(str) {
   return (str||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+// ── DEMOGRAPHIC INSIGHTS (GIRLS VS BOYS) ───────────
+function renderDemographics() {
+  const demoWidget = $('demographic-widget');
+  if (!demoWidget) return;
+
+  const femaleStudents = CSE_STUDENTS.filter(s => s.gender === 'F');
+  const maleStudents   = CSE_STUDENTS.filter(s => s.gender === 'M');
+
+  function getGroupStats(students) {
+    const total = students.length;
+    const studentEnrolls = new Set(students.map(s => s.enroll));
+    
+    // Placed: present in the final round of any company
+    const placedSet = new Set();
+    companies.forEach(co => {
+      const lastRound = co.rounds?.[co.rounds.length - 1];
+      lastRound?.students?.forEach(e => {
+        if (studentEnrolls.has(e)) placedSet.add(e);
+      });
+    });
+    const placed = placedSet.size;
+
+    // OA Cleared: present in first round of any company
+    const oaSet = new Set();
+    companies.forEach(co => {
+      const firstRound = co.rounds?.[0];
+      firstRound?.students?.forEach(e => {
+        if (studentEnrolls.has(e)) oaSet.add(e);
+      });
+    });
+    const oaCleared = oaSet.size;
+
+    const validCgpas = students.filter(s => typeof s.cgpa === 'number' && !isNaN(s.cgpa));
+    const avgCgpa = validCgpas.length ? (validCgpas.reduce((a, b) => a + b.cgpa, 0) / validCgpas.length).toFixed(2) : '—';
+    const ratePct = total > 0 ? Math.round((placed / total) * 100) : 0;
+
+    return { total, placed, oaCleared, avgCgpa, ratePct };
+  }
+
+  const femaleStats = getGroupStats(femaleStudents);
+  const maleStats   = getGroupStats(maleStudents);
+
+  demoWidget.innerHTML = `
+    <!-- Girls Stats Card -->
+    <div class="gender-card girls-card">
+      <div class="gender-card-header">
+        <div class="gender-avatar">👩</div>
+        <div class="gender-title-wrap">
+          <h3>Girls Insights</h3>
+          <p>${femaleStats.total} Total Female Candidates</p>
+        </div>
+      </div>
+      <div class="gender-stat-row">
+        <div class="gender-stat-item">
+          <div class="gender-stat-num">${femaleStats.placed}</div>
+          <div class="gender-stat-label">Final Offers</div>
+        </div>
+        <div class="gender-stat-item">
+          <div class="gender-stat-num">${femaleStats.oaCleared}</div>
+          <div class="gender-stat-label">OAs Cleared</div>
+        </div>
+        <div class="gender-stat-item">
+          <div class="gender-stat-num">${femaleStats.avgCgpa}</div>
+          <div class="gender-stat-label">Avg CGPA</div>
+        </div>
+      </div>
+      <div class="gender-progress-bar-bg">
+        <div class="gender-progress-bar-fill" style="width: ${Math.max(femaleStats.ratePct, 5)}%"></div>
+      </div>
+    </div>
+
+    <!-- Boys Stats Card -->
+    <div class="gender-card boys-card">
+      <div class="gender-card-header">
+        <div class="gender-avatar">👨</div>
+        <div class="gender-title-wrap">
+          <h3>Boys Insights</h3>
+          <p>${maleStats.total} Total Male Candidates</p>
+        </div>
+      </div>
+      <div class="gender-stat-row">
+        <div class="gender-stat-item">
+          <div class="gender-stat-num">${maleStats.placed}</div>
+          <div class="gender-stat-label">Final Offers</div>
+        </div>
+        <div class="gender-stat-item">
+          <div class="gender-stat-num">${maleStats.oaCleared}</div>
+          <div class="gender-stat-label">OAs Cleared</div>
+        </div>
+        <div class="gender-stat-item">
+          <div class="gender-stat-num">${maleStats.avgCgpa}</div>
+          <div class="gender-stat-label">Avg CGPA</div>
+        </div>
+      </div>
+      <div class="gender-progress-bar-bg">
+        <div class="gender-progress-bar-fill" style="width: ${Math.max(maleStats.ratePct, 5)}%"></div>
+      </div>
+    </div>
+  `;
+}
+
+// ── MY STATUS (PERSONALIZED TIMELINE) LOGIC ────────
+function initMyStatus() {
+  const searchInput = $('mystatus-search-input');
+  const searchBtn   = $('mystatus-search-btn');
+  const autoList    = $('mystatus-autocomplete');
+
+  if (!searchInput) return;
+
+  function executeSearch(enrollVal) {
+    const val = (enrollVal || searchInput.value).trim().toUpperCase();
+    if (!val) return;
+    searchInput.value = val;
+    autoList.classList.add('hidden');
+    localStorage.setItem('radar_last_enroll', val);
+    renderMyStatus(val);
+  }
+
+  searchBtn.addEventListener('click', () => executeSearch());
+
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') executeSearch();
+  });
+
+  // Autocomplete
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    if (!q || q.length < 2) {
+      autoList.classList.add('hidden');
+      return;
+    }
+    const matches = CSE_STUDENTS.filter(s => 
+      s.enroll.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)
+    ).slice(0, 6);
+
+    if (matches.length === 0) {
+      autoList.classList.add('hidden');
+      return;
+    }
+
+    autoList.innerHTML = matches.map(m => `
+      <div class="autocomplete-item" data-enroll="${m.enroll}">
+        <span class="ac-name">${titleCase(m.name)}</span>
+        <span class="ac-enroll">${m.enroll}</span>
+      </div>
+    `).join('');
+    autoList.classList.remove('hidden');
+  });
+
+  autoList.addEventListener('click', e => {
+    const item = e.target.closest('.autocomplete-item');
+    if (item) {
+      executeSearch(item.dataset.enroll);
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (!searchInput.contains(e.target) && !autoList.contains(e.target)) {
+      autoList.classList.add('hidden');
+    }
+  });
+
+  // Sample Chips
+  document.querySelectorAll('.sample-chip').forEach(chip => {
+    chip.addEventListener('click', () => executeSearch(chip.dataset.enroll));
+  });
+
+  // Saved ID Auto-Load
+  const savedEnroll = localStorage.getItem('radar_last_enroll');
+  if (savedEnroll) {
+    searchInput.value = savedEnroll;
+  }
+}
+
+function renderMyStatusFromInput() {
+  const searchInput = $('mystatus-search-input');
+  const savedEnroll = searchInput?.value.trim().toUpperCase() || localStorage.getItem('radar_last_enroll');
+  if (savedEnroll) {
+    renderMyStatus(savedEnroll);
+  }
+}
+
+function renderMyStatus(enroll) {
+  const profileSec  = $('mystatus-profile-section');
+  const profileCard = $('mystatus-profile-card');
+  const timelineSec = $('mystatus-timeline-section');
+  const timelineEl  = $('mystatus-timeline');
+  const emptyState  = $('mystatus-empty-state');
+  const countPill   = $('timeline-count-pill');
+
+  const student = CSE_STUDENTS.find(s => s.enroll.toUpperCase() === enroll.toUpperCase());
+
+  if (!student) {
+    profileSec.classList.add('hidden');
+    timelineSec.classList.add('hidden');
+    emptyState.classList.remove('hidden');
+    emptyState.innerHTML = `
+      <div class="empty-icon">❌</div>
+      <h3>No Record Found</h3>
+      <p class="empty-sub">No student record found for <strong>${escapeAttr(enroll)}</strong>. Please verify your Enrollment ID.</p>
+    `;
+    return;
+  }
+
+  // Hide empty state
+  emptyState.classList.add('hidden');
+  profileSec.classList.remove('hidden');
+  timelineSec.classList.remove('hidden');
+
+  // Filter companies where student has at least 1 shortlist / round record
+  const matchedCompanies = companies.filter(co => 
+    co.rounds?.some(r => r.students?.includes(student.enroll))
+  );
+
+  // Compute student summary metrics
+  const oaClearedCount = matchedCompanies.filter(co => co.rounds?.[0]?.students?.includes(student.enroll)).length;
+  const offersCount    = matchedCompanies.filter(co => {
+    const lastRound = co.rounds?.[co.rounds.length - 1];
+    return lastRound?.students?.includes(student.enroll);
+  }).length;
+  const interviewCount = matchedCompanies.filter(co => 
+    co.rounds?.slice(1).some(r => r.students?.includes(student.enroll))
+  ).length;
+
+  // Render Profile Header Banner
+  const genderIcon = student.gender === 'F' ? '👩' : '👨';
+  profileCard.innerHTML = `
+    <div class="profile-main">
+      <div class="profile-avatar">${student.name.charAt(0)}</div>
+      <div class="profile-info">
+        <div class="profile-name">${titleCase(student.name)} ${genderIcon}</div>
+        <div class="profile-meta-row">
+          <span class="profile-tag">${student.enroll}</span>
+          <span>Rank: <strong>#${student.rank}</strong></span>
+          <span>CGPA: <strong>${student.cgpa ? student.cgpa.toFixed(4) : 'N/A'}</strong></span>
+          <span>Branch: <strong>${student.branch}</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-metrics">
+      <div class="pm-card">
+        <div class="pm-num blue">${matchedCompanies.length}</div>
+        <div class="pm-label">Drives Tracked</div>
+      </div>
+      <div class="pm-card">
+        <div class="pm-num purple">${oaClearedCount}</div>
+        <div class="pm-label">OAs Cleared</div>
+      </div>
+      <div class="pm-card">
+        <div class="pm-num yellow">${interviewCount}</div>
+        <div class="pm-label">Interviews</div>
+      </div>
+      <div class="pm-card">
+        <div class="pm-num green">${offersCount}</div>
+        <div class="pm-label">Final Offers</div>
+      </div>
+    </div>
+  `;
+
+  countPill.textContent = `${matchedCompanies.length} active drive${matchedCompanies.length === 1 ? '' : 's'}`;
+
+  if (matchedCompanies.length === 0) {
+    timelineEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        <h3>No Shortlists Logged Yet</h3>
+        <p class="empty-sub">You currently have no round or shortlist entries recorded in active campus drives.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Render Vertical Timeline Items
+  timelineEl.innerHTML = matchedCompanies.map(co => {
+    const rounds = co.rounds || [];
+    const lastRoundIdx = rounds.length - 1;
+    const isFinalOffer = rounds[lastRoundIdx]?.students?.includes(student.enroll);
+
+    // Find rounds student passed
+    const passedRounds = rounds.filter(r => r.students?.includes(student.enroll));
+
+    // Determine status class and badge
+    let statusClass = 'status-cleared';
+    let badgeText   = `Purple · Cleared ${passedRounds.length} Round${passedRounds.length > 1 ? 's' : ''}`;
+
+    if (isFinalOffer) {
+      statusClass = 'status-offered';
+      badgeText   = '🎉 Final Offer Received!';
+    } else {
+      // Find latest round with recorded students
+      let latestPopulatedRoundIdx = -1;
+      for (let i = rounds.length - 1; i >= 0; i--) {
+        if (rounds[i].students && rounds[i].students.length > 0) {
+          latestPopulatedRoundIdx = i;
+          break;
+        }
+      }
+
+      if (latestPopulatedRoundIdx >= 0) {
+        const inLatest = rounds[latestPopulatedRoundIdx].students.includes(student.enroll);
+        if (inLatest) {
+          statusClass = 'status-in-progress';
+          badgeText   = `🔵 Shortlisted: ${rounds[latestPopulatedRoundIdx].name}`;
+        } else {
+          // Check if student was in a previous round but omitted in latest populated
+          const wasInPrevious = rounds.slice(0, latestPopulatedRoundIdx).some(r => r.students?.includes(student.enroll));
+          if (wasInPrevious) {
+            statusClass = 'status-ended';
+            badgeText   = `🔴 Process Ended at ${rounds[latestPopulatedRoundIdx].name}`;
+          } else {
+            statusClass = 'status-awaiting';
+            badgeText   = `⏳ Results Pending`;
+          }
+        }
+      }
+    }
+
+    // Build Round Flow Steps HTML
+    const stepsHTML = rounds.map((r, idx) => {
+      const isPassed = r.students?.includes(student.enroll);
+      let stepClass = isPassed ? 'passed' : '';
+      let icon = isPassed ? '✓' : '•';
+
+      return `
+        <div class="round-step ${stepClass}">
+          <span>${icon} ${escapeAttr(r.name)}</span>
+        </div>
+        ${idx < rounds.length - 1 ? '<span class="round-arrow">➔</span>' : ''}
+      `;
+    }).join('');
+
+    const logoHTML = co.logoUrl
+      ? `<img src="${escapeAttr(co.logoUrl)}" alt="${escapeAttr(co.name)}" />`
+      : `🏢`;
+
+    return `
+      <div class="timeline-item ${statusClass}">
+        <div class="timeline-dot"></div>
+        <div class="timeline-header">
+          <div class="tc-company-wrap">
+            <div class="tc-logo">${logoHTML}</div>
+            <div>
+              <div class="tc-name">${escapeAttr(co.name)}</div>
+              <div class="tc-sector">${escapeAttr(co.sector || 'Placement Drive')} · Cutoff: CGPA ${co.cgpa || 'N/A'}</div>
+            </div>
+          </div>
+          <span class="tc-badge">${badgeText}</span>
+        </div>
+        <div class="tc-rounds-flow">
+          ${stepsHTML}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 // ── INIT ────────────────────────────────────────────
+initMyStatus();
 navigate('dashboard');
