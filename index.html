@@ -1,289 +1,309 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CSE'28 Placement Radar 🎯</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <!-- Firebase v9 compat (CDN) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
+
 <body>
 
-<!-- ═══════════════════════════════════════════
+  <!-- INDEPENDENCE DAY BANNER (TEMPORARY Aug 12-20) -->
+  <canvas id="india-canvas"></canvas>
+  <div id="independence-banner" class="independence-banner hidden">
+    <div class="banner-content">
+      <span class="banner-flag">🇮🇳</span>
+      <span class="banner-chakra">☸</span>
+      <span class="banner-main-text">Happy 79th Independence Day!</span>
+      <span class="banner-sub">· Wishing you freedom &amp; success in your career journey ·</span>
+      <span class="banner-chakra" style="animation-direction:reverse">☸</span>
+      <span class="banner-flag" style="animation-delay:0.3s">🇮🇳</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
      NAVBAR
 ════════════════════════════════════════════ -->
-<nav class="navbar">
-  <div class="nav-brand">
-    <span class="brand-icon">⚡</span>
-    <span class="brand-text">CSE<span class="brand-year">'28</span> Radar</span>
-  </div>
-  <div class="nav-links">
-    <a href="#" class="nav-link active" data-page="dashboard">Dashboard</a>
-    <a href="#" class="nav-link" data-page="mystatus">My Status 🎯</a>
-    <a href="#" class="nav-link" data-page="companies">Companies</a>
-    <a href="#" class="nav-link" data-page="leaderboard">Leaderboard</a>
-  </div>
-  <div class="nav-auth">
-    <div id="auth-guest" class="auth-state">
-      <button class="btn-ghost" id="adminLoginBtn">Admin Login</button>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">⚡</span>
+      <span class="brand-text">CSE<span class="brand-year">'28</span> Radar</span>
     </div>
-    <div id="auth-admin" class="auth-state hidden">
-      <span class="admin-badge">👑 Admin</span>
-      <button class="btn-ghost" id="logoutBtn">Logout</button>
+    <div class="nav-links">
+      <a href="#" class="nav-link active" data-page="dashboard">Dashboard</a>
+      <a href="#" class="nav-link" data-page="mystatus">My Status 🎯</a>
+      <a href="#" class="nav-link" data-page="companies">Companies</a>
+      <a href="#" class="nav-link" data-page="leaderboard">Leaderboard</a>
     </div>
-  </div>
-</nav>
+    <div class="nav-auth">
+      <div id="auth-guest" class="auth-state">
+        <button class="btn-ghost" id="adminLoginBtn">Admin Login</button>
+      </div>
+      <div id="auth-admin" class="auth-state hidden">
+        <span class="admin-badge">👑 Admin</span>
+        <button class="btn-ghost" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </nav>
 
-<!-- ═══════════════════════════════════════════
+  <!-- ═══════════════════════════════════════════
      PAGES
 ════════════════════════════════════════════ -->
-<main>
+  <main>
 
-  <!-- ── PAGE: DASHBOARD ── -->
-  <div id="page-dashboard" class="page active">
+    <!-- ── PAGE: DASHBOARD ── -->
+    <div id="page-dashboard" class="page active">
 
-    <!-- Hero Stats -->
-    <section class="hero-section">
-      <div class="hero-title">
-        <h1>Placement <span class="accent">Radar</span></h1>
-        <p class="hero-sub">Real-time internship hunt tracker · CSE Batch 2024–2028</p>
-      </div>
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-num" id="stat-companies">0</div>
-          <div class="stat-label">Companies</div>
+      <!-- Hero Stats -->
+      <section class="hero-section">
+        <div class="hero-title">
+          <h1>Placement <span class="accent">Radar</span></h1>
+          <p class="hero-sub">Real-time internship hunt tracker · CSE Batch 2024–2028</p>
         </div>
-        <div class="stat-card">
-          <div class="stat-num" id="stat-offers">0</div>
-          <div class="stat-label">Final Offers</div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-num" id="stat-companies">0</div>
+            <div class="stat-label">Companies</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="stat-offers">0</div>
+            <div class="stat-label">Final Offers</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="stat-oa">0</div>
+            <div class="stat-label">OAs Cleared</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num accent" id="stat-batch">124</div>
+            <div class="stat-label">CSE Students</div>
+          </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-num" id="stat-oa">0</div>
-          <div class="stat-label">OAs Cleared</div>
+      </section>
+
+      <!-- Demographic Insights (Girls vs Boys) -->
+      <section class="section">
+        <div class="section-header">
+          <h2>Demographic Insights 📊</h2>
+          <span class="section-pill">Girls vs Boys Stats</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-num accent" id="stat-batch">124</div>
-          <div class="stat-label">CSE Students</div>
+        <div class="demographic-grid" id="demographic-widget">
+          <!-- populated dynamically by JS -->
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Demographic Insights (Girls vs Boys) -->
-    <section class="section">
-      <div class="section-header">
-        <h2>Demographic Insights 📊</h2>
-        <span class="section-pill">Girls vs Boys Stats</span>
-      </div>
-      <div class="demographic-grid" id="demographic-widget">
-        <!-- populated dynamically by JS -->
-      </div>
-    </section>
-
-    <!-- Company Cards Grid -->
-    <section class="section">
-      <div class="section-header">
-        <h2>Active Companies</h2>
-        <span class="section-pill" id="company-count-pill">0 tracked</span>
-      </div>
-      <div id="company-grid" class="company-grid">
-        <div class="empty-state">
-          <div class="empty-icon">🏢</div>
-          <p>No companies added yet.</p>
-          <p class="empty-sub">Admin can add companies from the Companies tab.</p>
+      <!-- Company Cards Grid -->
+      <section class="section">
+        <div class="section-header">
+          <h2>Active Companies</h2>
+          <span class="section-pill" id="company-count-pill">0 tracked</span>
         </div>
-      </div>
-    </section>
-
-  </div>
-
-  <!-- ── PAGE: COMPANIES ── -->
-  <div id="page-companies" class="page">
-
-    <section class="section">
-      <div class="section-header">
-        <h2>Company Tracker</h2>
-        <div id="admin-controls" class="hidden">
-          <button class="btn-primary" id="addCompanyBtn">+ Add Company</button>
+        <div id="company-grid" class="company-grid">
+          <div class="empty-state">
+            <div class="empty-icon">🏢</div>
+            <p>No companies added yet.</p>
+            <p class="empty-sub">Admin can add companies from the Companies tab.</p>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Company detail area (shown when company clicked) -->
-      <div id="company-detail" class="company-detail hidden">
-        <div class="detail-header">
-          <button class="btn-back" id="backToListBtn">← All Companies</button>
-          <div class="detail-company-name" id="detail-company-name"></div>
-          <div id="admin-edit-controls" class="hidden">
-            <button class="btn-accent" id="editCompanyBtn">Edit Rounds</button>
-            <button class="btn-danger" id="deleteCompanyBtn">Delete</button>
+    </div>
+
+    <!-- ── PAGE: COMPANIES ── -->
+    <div id="page-companies" class="page">
+
+      <section class="section">
+        <div class="section-header">
+          <h2>Company Tracker</h2>
+          <div id="admin-controls" class="hidden">
+            <button class="btn-primary" id="addCompanyBtn">+ Add Company</button>
           </div>
         </div>
 
-        <!-- Funnel / flow diagram -->
-        <div id="funnel-container" class="funnel-container"></div>
+        <!-- Company detail area (shown when company clicked) -->
+        <div id="company-detail" class="company-detail hidden">
+          <div class="detail-header">
+            <button class="btn-back" id="backToListBtn">← All Companies</button>
+            <div class="detail-company-name" id="detail-company-name"></div>
+            <div id="admin-edit-controls" class="hidden">
+              <button class="btn-accent" id="editCompanyBtn">Edit Rounds</button>
+              <button class="btn-danger" id="deleteCompanyBtn">Delete</button>
+            </div>
+          </div>
 
-        <!-- Round tables -->
-        <div id="round-tables" class="round-tables"></div>
-      </div>
+          <!-- Funnel / flow diagram -->
+          <div id="funnel-container" class="funnel-container"></div>
 
-      <!-- Company list -->
-      <div id="company-list" class="company-list-full">
-        <div class="empty-state">
-          <div class="empty-icon">🏢</div>
-          <p>No companies added yet.</p>
+          <!-- Round tables -->
+          <div id="round-tables" class="round-tables"></div>
         </div>
-      </div>
-    </section>
-  </div>
 
-  <!-- ── PAGE: LEADERBOARD ── -->
-  <div id="page-leaderboard" class="page">
-    <section class="section">
-      <div class="section-header">
-        <h2>CSE Batch Leaderboard</h2>
-        <div class="filter-row">
-          <input type="text" id="searchStudent" placeholder="Search name / enroll..." class="input-search" />
-          <select id="filterBy" class="input-select">
-            <option value="rank">Sort by Rank</option>
-            <option value="cgpa">Sort by CGPA</option>
-            <option value="offers">Sort by Offers</option>
-          </select>
+        <!-- Company list -->
+        <div id="company-list" class="company-list-full">
+          <div class="empty-state">
+            <div class="empty-icon">🏢</div>
+            <p>No companies added yet.</p>
+          </div>
         </div>
-      </div>
-      <div id="leaderboard-table" class="leaderboard-table">
-        <!-- Populated by JS -->
-      </div>
-    </section>
-  </div>
-
-  <!-- ── PAGE: MY STATUS (PERSONALIZED TIMELINE) ── -->
-  <div id="page-mystatus" class="page">
-
-    <section class="mystatus-hero">
-      <div class="mystatus-search-card">
-        <div class="mystatus-header">
-          <h2>My Status Timeline 🎯</h2>
-          <p>Track your personal placement & internship round progress</p>
-        </div>
-        <div class="search-input-wrapper">
-          <input type="text" id="mystatus-search-input" placeholder="Enter Enrollment ID (e.g. BT24CSE123)..." autocomplete="off" />
-          <button id="mystatus-search-btn" class="btn-primary">View Status</button>
-          <div id="mystatus-autocomplete" class="autocomplete-list hidden"></div>
-        </div>
-        <div class="sample-enrolls">
-          <span>Quick Try:</span>
-          <button class="sample-chip" data-enroll="BT24CSE123">BT24CSE123 (Kartik)</button>
-          <button class="sample-chip" data-enroll="BT24CSE037">BT24CSE037 (Prathibha)</button>
-          <button class="sample-chip" data-enroll="BT24CSE125">BT24CSE125 (Tvisha)</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Student Profile Banner & Metrics -->
-    <section id="mystatus-profile-section" class="section hidden">
-      <div id="mystatus-profile-card" class="profile-card">
-        <!-- populated dynamically -->
-      </div>
-    </section>
-
-    <!-- Personalized Vertical Timeline -->
-    <section id="mystatus-timeline-section" class="section hidden">
-      <div class="section-header">
-        <h2>Company Milestones</h2>
-        <span class="section-pill" id="timeline-count-pill">0 active drives</span>
-      </div>
-      <div id="mystatus-timeline" class="timeline-container">
-        <!-- populated dynamically -->
-      </div>
-    </section>
-
-    <!-- Initial / Empty Search State -->
-    <div id="mystatus-empty-state" class="empty-state mystatus-empty">
-      <div class="empty-icon">🔍</div>
-      <h3>Enter Your Enrollment ID</h3>
-      <p class="empty-sub">Search your Enrollment ID above to unlock your personalized application timeline & shortlist tracker.</p>
+      </section>
     </div>
 
-  </div>
+    <!-- ── PAGE: LEADERBOARD ── -->
+    <div id="page-leaderboard" class="page">
+      <section class="section">
+        <div class="section-header">
+          <h2>CSE Batch Leaderboard</h2>
+          <div class="filter-row">
+            <input type="text" id="searchStudent" placeholder="Search name / enroll..." class="input-search" />
+            <select id="filterBy" class="input-select">
+              <option value="rank">Sort by Rank</option>
+              <option value="cgpa">Sort by CGPA</option>
+              <option value="offers">Sort by Offers</option>
+            </select>
+          </div>
+        </div>
+        <div id="leaderboard-table" class="leaderboard-table">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+    </div>
 
-</main>
+    <!-- ── PAGE: MY STATUS (PERSONALIZED TIMELINE) ── -->
+    <div id="page-mystatus" class="page">
 
-<!-- ═══════════════════════════════════════════
+      <section class="mystatus-hero">
+        <div class="mystatus-search-card">
+          <div class="mystatus-header">
+            <h2>My Status Timeline 🎯</h2>
+            <p>Track your personal placement & internship round progress</p>
+          </div>
+          <div class="search-input-wrapper">
+            <input type="text" id="mystatus-search-input" placeholder="Enter Enrollment ID (e.g. BT24CSE123)..."
+              autocomplete="off" />
+            <button id="mystatus-search-btn" class="btn-primary">View Status</button>
+            <div id="mystatus-autocomplete" class="autocomplete-list hidden"></div>
+          </div>
+          <div class="sample-enrolls">
+            <span>Quick Try:</span>
+            <button class="sample-chip" data-enroll="BT24CSE123">BT24CSE123 (Kartik)</button>
+            <button class="sample-chip" data-enroll="BT24CSE037">BT24CSE037 (Prathibha)</button>
+            <button class="sample-chip" data-enroll="BT24CSE125">BT24CSE125 (Tvisha)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Student Profile Banner & Metrics -->
+      <section id="mystatus-profile-section" class="section hidden">
+        <div id="mystatus-profile-card" class="profile-card">
+          <!-- populated dynamically -->
+        </div>
+      </section>
+
+      <!-- Personalized Vertical Timeline -->
+      <section id="mystatus-timeline-section" class="section hidden">
+        <div class="section-header">
+          <h2>Company Milestones</h2>
+          <span class="section-pill" id="timeline-count-pill">0 active drives</span>
+        </div>
+        <div id="mystatus-timeline" class="timeline-container">
+          <!-- populated dynamically -->
+        </div>
+      </section>
+
+      <!-- Initial / Empty Search State -->
+      <div id="mystatus-empty-state" class="empty-state mystatus-empty">
+        <div class="empty-icon">🔍</div>
+        <h3>Enter Your Enrollment ID</h3>
+        <p class="empty-sub">Search your Enrollment ID above to unlock your personalized application timeline &
+          shortlist tracker.</p>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════
      MODALS
 ════════════════════════════════════════════ -->
 
-<!-- Admin Login Modal -->
-<div id="modal-login" class="modal hidden">
-  <div class="modal-box">
-    <div class="modal-title">Admin Access 🔐</div>
-    <input type="email" id="admin-email" placeholder="admin@email.com" class="modal-input" />
-    <input type="password" id="admin-password" placeholder="password" class="modal-input" />
-    <div class="modal-actions">
-      <button class="btn-ghost" id="cancelLoginBtn">Cancel</button>
-      <button class="btn-primary" id="confirmLoginBtn">Login</button>
-    </div>
-    <div id="login-error" class="error-msg hidden"></div>
-  </div>
-</div>
-
-<!-- Add/Edit Company Modal -->
-<div id="modal-company" class="modal hidden">
-  <div class="modal-box wide">
-    <div class="modal-title" id="modal-company-title">Add Company</div>
-
-    <label class="form-label">Company Name</label>
-    <input type="text" id="co-name" placeholder="e.g. Goldman Sachs" class="modal-input" />
-
-    <label class="form-label">Logo URL (optional)</label>
-    <input type="text" id="co-logo" placeholder="https://..." class="modal-input" />
-
-    <label class="form-label">Sector / Type</label>
-    <input type="text" id="co-sector" placeholder="e.g. FinTech, Product, Service" class="modal-input" />
-
-    <label class="form-label">CGPA Cutoff (CSE)</label>
-    <input type="number" id="co-cgpa" placeholder="e.g. 7.5" step="0.1" class="modal-input" />
-
-    <label class="form-label">Eligible Branches (comma separated)</label>
-    <input type="text" id="co-branches" placeholder="CSE,ECE,EEE" class="modal-input" />
-
-    <label class="form-label">Rounds (define each round name)</label>
-    <div id="rounds-builder" class="rounds-builder"></div>
-    <button class="btn-ghost small" id="addRoundBtn">+ Add Round</button>
-
-    <div class="modal-actions">
-      <button class="btn-ghost" id="cancelCompanyBtn">Cancel</button>
-      <button class="btn-primary" id="saveCompanyBtn">Save Company</button>
+  <!-- Admin Login Modal -->
+  <div id="modal-login" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-title">Admin Access 🔐</div>
+      <input type="email" id="admin-email" placeholder="admin@email.com" class="modal-input" />
+      <input type="password" id="admin-password" placeholder="password" class="modal-input" />
+      <div class="modal-actions">
+        <button class="btn-ghost" id="cancelLoginBtn">Cancel</button>
+        <button class="btn-primary" id="confirmLoginBtn">Login</button>
+      </div>
+      <div id="login-error" class="error-msg hidden"></div>
     </div>
   </div>
-</div>
 
-<!-- Manage Round Students Modal -->
-<div id="modal-round" class="modal hidden">
-  <div class="modal-box wide">
-    <div class="modal-title" id="modal-round-title">Manage Round</div>
-    <p class="modal-hint">Select students who <strong>cleared</strong> this round</p>
-    <input type="text" id="round-student-search" placeholder="Search name or enroll..." class="modal-input" />
-    <div id="round-student-list" class="round-student-list"></div>
-    <div class="modal-actions">
-      <button class="btn-ghost" id="cancelRoundBtn">Cancel</button>
-      <button class="btn-primary" id="saveRoundBtn">Save</button>
+  <!-- Add/Edit Company Modal -->
+  <div id="modal-company" class="modal hidden">
+    <div class="modal-box wide">
+      <div class="modal-title" id="modal-company-title">Add Company</div>
+
+      <label class="form-label">Company Name</label>
+      <input type="text" id="co-name" placeholder="e.g. Goldman Sachs" class="modal-input" />
+
+      <label class="form-label">Logo URL (optional)</label>
+      <input type="text" id="co-logo" placeholder="https://..." class="modal-input" />
+
+      <label class="form-label">Sector / Type</label>
+      <input type="text" id="co-sector" placeholder="e.g. FinTech, Product, Service" class="modal-input" />
+
+      <label class="form-label">CGPA Cutoff (CSE)</label>
+      <input type="number" id="co-cgpa" placeholder="e.g. 7.5" step="0.1" class="modal-input" />
+
+      <label class="form-label">Eligible Branches (comma separated)</label>
+      <input type="text" id="co-branches" placeholder="CSE,ECE,EEE" class="modal-input" />
+
+      <label class="form-label">Rounds (define each round name)</label>
+      <div id="rounds-builder" class="rounds-builder"></div>
+      <button class="btn-ghost small" id="addRoundBtn">+ Add Round</button>
+
+      <div class="modal-actions">
+        <button class="btn-ghost" id="cancelCompanyBtn">Cancel</button>
+        <button class="btn-primary" id="saveCompanyBtn">Save Company</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Overlay -->
-<div id="overlay" class="overlay hidden"></div>
+  <!-- Manage Round Students Modal -->
+  <div id="modal-round" class="modal hidden">
+    <div class="modal-box wide">
+      <div class="modal-title" id="modal-round-title">Manage Round</div>
+      <p class="modal-hint">Select students who <strong>cleared</strong> this round</p>
+      <input type="text" id="round-student-search" placeholder="Search name or enroll..." class="modal-input" />
+      <div id="round-student-list" class="round-student-list"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="cancelRoundBtn">Cancel</button>
+        <button class="btn-primary" id="saveRoundBtn">Save</button>
+      </div>
+    </div>
+  </div>
 
-<!-- ═══════════════════════════════════════════
+  <!-- Overlay -->
+  <div id="overlay" class="overlay hidden"></div>
+
+  <!-- ═══════════════════════════════════════════
      SCRIPTS
 ════════════════════════════════════════════ -->
-<script src="data/students.js"></script>
-<script src="js/firebase-config.js"></script>
-<script src="js/app.js"></script>
+  <script src="data/students.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app.js"></script>
 
 </body>
+
 </html>

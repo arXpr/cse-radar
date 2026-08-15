@@ -11,6 +11,138 @@ let editingCompanyId = null;        // null = adding new, string = editing exist
 let currentRoundIdx = null;         // which round modal is open for
 let roundModalSelected = new Set(); // student enrolls selected in round modal
 
+// ── INDEPENDENCE DAY THEME (TEMPORARY Aug 12-20) ───
+function initIndependenceTheme() {
+  const now = new Date();
+  const m = now.getMonth() + 1;
+  const d = now.getDate();
+  if (m !== 8 || d < 12 || d > 20) return;
+
+  // Apply theme class
+  document.body.classList.add('independence-theme');
+
+  // Show banner with animation
+  const banner = document.getElementById('independence-banner');
+  if (banner) {
+    banner.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => banner.classList.add('visible'));
+    });
+  }
+
+  // Start particle canvas
+  startIndiaParticles();
+}
+
+function startIndiaParticles() {
+  const canvas = document.getElementById('india-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const COLORS = ['#FF9933', '#ffffff', '#138808', '#000080'];
+  const particles = [];
+  let W, H;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Seed particles
+  for (let i = 0; i < 55; i++) {
+    particles.push(mkParticle(true));
+  }
+
+  function mkParticle(random) {
+    const types = ['circle', 'star', 'chakra'];
+    return {
+      x:     random ? Math.random() * (W || window.innerWidth) : (W || window.innerWidth) * Math.random(),
+      y:     random ? Math.random() * (H || window.innerHeight) : -20,
+      size:  3 + Math.random() * 5,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      speedX: (Math.random() - 0.5) * 0.5,
+      speedY: 0.35 + Math.random() * 0.55,
+      alpha:  0.1 + Math.random() * 0.35,
+      rot:    Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.04,
+      type:  types[Math.floor(Math.random() * types.length)],
+    };
+  }
+
+  function drawStar(ctx, x, y, r, color, alpha) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+      i === 0 ? ctx.moveTo(x + r * Math.cos(angle), y + r * Math.sin(angle))
+              : ctx.lineTo(x + r * Math.cos(angle), y + r * Math.sin(angle));
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawChakra(ctx, x, y, r, color, alpha, rot) {
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.6;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.stroke();
+    for (let i = 0; i < 24; i++) {
+      const a = (i * Math.PI * 2) / 24;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(r * Math.cos(a), r * Math.sin(a));
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.rot += p.rotSpeed;
+
+      if (p.type === 'circle') {
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else if (p.type === 'star') {
+        drawStar(ctx, p.x, p.y, p.size, p.color, p.alpha);
+      } else {
+        drawChakra(ctx, p.x, p.y, p.size * 1.8, p.color, p.alpha, p.rot);
+      }
+
+      // reset particle when it falls off bottom
+      if (p.y > H + 20) {
+        particles[i] = mkParticle(false);
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  // Fade in canvas after short delay
+  setTimeout(() => canvas.classList.add('visible'), 600);
+  draw();
+}
+initIndependenceTheme();
+
 // ── DOM REFS ───────────────────────────────────────
 const $ = id => document.getElementById(id);
 

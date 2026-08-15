@@ -1224,3 +1224,161 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
 
 .round-arrow { color: var(--text-muted); font-size: 0.7rem; }
 
+/* ══════════════════════════════════════════
+   INDEPENDENCE DAY THEME (TEMPORARY — Aug 12–20)
+══════════════════════════════════════════ */
+
+/* ---------- CSS variable overrides ---------- */
+body.independence-theme {
+  --accent:      #FF9933;
+  --accent-glow: rgba(255,153,51,0.25);
+  --green:       #138808;
+  --green-dim:   rgba(19,136,8,0.18);
+  --ind-saffron: #FF9933;
+  --ind-white:   #f5f5f5;
+  --ind-green:   #138808;
+  --ind-navy:    #000080;
+}
+
+/* ---------- Tricolor top stripe on navbar ---------- */
+body.independence-theme .navbar {
+  border-bottom: none;
+  box-shadow:
+    0 3px 0 0 #FF9933,
+    0 4.5px 0 0 #f5f5f5,
+    0 6px 0 0 #138808;
+}
+
+/* ---------- Particle canvas (behind everything) ---------- */
+#india-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 1s;
+}
+#india-canvas.visible { opacity: 1; }
+
+/* ---------- Banner wrapper ---------- */
+.independence-banner {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0;
+  height: 0;
+  opacity: 0;
+  transition: height 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s;
+}
+.independence-banner.visible {
+  height: 52px;
+  opacity: 1;
+}
+.independence-banner.hidden { display: none; }
+
+/* Tricolor stripes (absolute layers) */
+.independence-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    #FF9933 0% 33.3%,
+    #f0f0e8 33.3% 66.6%,
+    #138808 66.6% 100%
+  );
+  opacity: 0.92;
+}
+
+/* Shine sweep */
+.independence-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.35) 50%, transparent 80%);
+  animation: bannerShine 3s ease-in-out infinite;
+}
+
+@keyframes bannerShine {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(200%); }
+}
+
+/* Banner text container */
+.banner-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #000;
+}
+
+.banner-chakra {
+  font-size: 1.4rem;
+  animation: spinChakra 4s linear infinite;
+  display: inline-block;
+  filter: drop-shadow(0 0 6px rgba(0,0,128,0.5));
+}
+@keyframes spinChakra {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.banner-main-text {
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+}
+
+.banner-sub {
+  font-weight: 500;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.banner-flag {
+  font-size: 1.3rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  animation: flagWave 1.5s ease-in-out infinite alternate;
+}
+@keyframes flagWave {
+  from { transform: rotate(-5deg) scale(1); }
+  to   { transform: rotate(5deg) scale(1.08); }
+}
+
+/* ---------- Glow on stat cards ---------- */
+body.independence-theme .stat-card:nth-child(1) { border-color: rgba(255,153,51,0.4); box-shadow: 0 0 16px rgba(255,153,51,0.1); }
+body.independence-theme .stat-card:nth-child(2) { border-color: rgba(19,136,8,0.4);  box-shadow: 0 0 16px rgba(19,136,8,0.1); }
+body.independence-theme .stat-card:nth-child(3) { border-color: rgba(255,153,51,0.4); box-shadow: 0 0 16px rgba(255,153,51,0.1); }
+body.independence-theme .stat-card:nth-child(4) { border-color: rgba(0,0,128,0.5);    box-shadow: 0 0 16px rgba(0,0,128,0.15); }
+
+/* ---------- Tricolor hero title ---------- */
+body.independence-theme .hero-title h1 .accent {
+  background: linear-gradient(90deg, #FF9933, #138808);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ---------- Active nav link tricolor underline ---------- */
+body.independence-theme .nav-link.active {
+  background: transparent;
+  border-bottom: 2px solid #FF9933;
+  color: #FF9933;
+  border-radius: 0;
+}
+
+/* ---------- Buttons ---------- */
+body.independence-theme .btn-primary {
+  background: linear-gradient(135deg, #FF9933, #e8820a);
+  box-shadow: 0 4px 16px rgba(255,153,51,0.3);
+}
+body.independence-theme .btn-primary:hover {
+  background: linear-gradient(135deg, #ffaa55, #FF9933);
+  box-shadow: 0 6px 24px rgba(255,153,51,0.45);
+}
