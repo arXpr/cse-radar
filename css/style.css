@@ -1382,3 +1382,40 @@ body.independence-theme .btn-primary:hover {
   background: linear-gradient(135deg, #ffaa55, #FF9933);
   box-shadow: 0 6px 24px rgba(255,153,51,0.45);
 }
+
+/* ---------- Independence Banner — Mobile Fix ---------- */
+@media (max-width: 600px) {
+  .independence-banner {
+    /* Let height adjust naturally on mobile */
+    overflow: hidden;
+  }
+  .independence-banner.visible {
+    height: auto;
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+  .banner-content {
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+  /* Hide the subtitle text on small screens */
+  .banner-sub {
+    display: none;
+  }
+  /* Hide the second chakra/flag pair to reduce clutter */
+  .banner-chakra:last-of-type,
+  .banner-flag:last-of-type {
+    display: none;
+  }
+  .banner-main-text {
+    font-size: 0.85rem;
+  }
+  .banner-chakra {
+    font-size: 1.1rem;
+  }
+  .banner-flag {
+    font-size: 1.1rem;
+  }
+}
