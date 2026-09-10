@@ -692,10 +692,24 @@ function renderLeaderboard() {
 
     const offerDots = offers.map(() => `<div class="offer-dot"></div>`).join('');
 
-    return `<div class="lb-row ${s.rank <= 3 ? 'top3' : ''}">
+    const isDev = s.enroll === 'BT24CSE093';
+    const rowClass = `lb-row ${s.rank <= 3 ? 'top3' : ''} ${isDev ? 'lb-dev-row' : ''}`.trim();
+    const rowIdAttr = isDev ? 'id="lb-row-arya"' : '';
+
+    const devBadgeHTML = isDev ? `
+      <span class="dev-scratch-card" id="arya-scratch-card" title="Arya Pratik (Website Developer)">
+        <span class="dev-revealed-label">
+          <span class="dev-icon">👨‍💻</span>
+          <span class="dev-text">developer</span>
+        </span>
+        <canvas class="dev-foil-canvas" id="arya-foil-canvas" width="94" height="20" aria-hidden="true"></canvas>
+      </span>
+    ` : '';
+
+    return `<div class="${rowClass}" ${rowIdAttr}>
       <div class="lb-rank">${s.rank}</div>
       <div class="lb-name-wrap">
-        <div class="lb-name">${titleCase(s.name)}</div>
+        <div class="lb-name">${titleCase(s.name)}${devBadgeHTML}</div>
         <div class="lb-enroll">${s.enroll}</div>
       </div>
       <div class="lb-cgpa">${s.cgpa ? s.cgpa.toFixed(4) : '—'}</div>
@@ -703,6 +717,191 @@ function renderLeaderboard() {
       <div class="lb-chips">${chipsHTML}</div>
     </div>`;
   }).join('');
+
+  initAryaScratch();
+}
+
+// ── ARYA PRATIK (BT24CSE093) SCRATCH EFFECT ─────────
+function initAryaScratch() {
+  const row = $('lb-row-arya');
+  const canvas = $('arya-foil-canvas');
+  if (!row || !canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  function drawFoil() {
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    const grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, '#2e2c3d');
+    grad.addColorStop(0.5, '#45415c');
+    grad.addColorStop(1, '#222030');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Subtle hatch scratch texture
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
+    ctx.lineWidth = 1;
+    for (let x = -h; x < w + h; x += 5) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + h, h);
+      ctx.stroke();
+    }
+
+    // Foil label
+    ctx.fillStyle = '#b3aed4';
+    ctx.font = 'bold 9px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('⚡ scratch', w / 2, h / 2);
+    ctx.restore();
+
+    canvas.style.opacity = '1';
+    canvas.style.display = 'block';
+  }
+
+  drawFoil();
+
+  let isScratched = false;
+  let isScratching = false;
+  let resetTimer = null;
+
+  function doScratch() {
+    if (isScratched || isScratching) return;
+    if (resetTimer) clearTimeout(resetTimer);
+    isScratching = true;
+
+    // Row scratch slash glint
+    row.classList.add('scratching');
+    setTimeout(() => {
+      row.classList.remove('scratching');
+      row.classList.add('scratched');
+    }, 450);
+
+    // Spawn 5 micro spark particles for extra flair without being heavy
+    spawnScratchSparks(canvas);
+
+    // Animated multi-stroke scratch lines across foil
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    const paths = [
+      [{ x: 4, y: 4 }, { x: w * 0.35, y: h * 0.7 }, { x: w * 0.65, y: h * 0.3 }, { x: w * 0.95, y: h * 0.75 }],
+      [{ x: 8, y: h * 0.8 }, { x: w * 0.4, y: h * 0.25 }, { x: w * 0.7, y: h * 0.85 }, { x: w - 4, y: h * 0.3 }],
+      [{ x: 6, y: h * 0.5 }, { x: w * 0.3, y: h * 0.45 }, { x: w * 0.6, y: h * 0.55 }, { x: w - 6, y: h * 0.5 }]
+    ];
+
+    let pathIdx = 0;
+    function playNextPath() {
+      if (pathIdx >= paths.length) {
+        canvas.style.transition = 'opacity 0.25s ease';
+        canvas.style.opacity = '0';
+        setTimeout(() => {
+          canvas.style.display = 'none';
+          isScratched = true;
+          isScratching = false;
+        }, 260);
+        return;
+      }
+
+      const pts = paths[pathIdx];
+      let pt = 0;
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+
+      function stepLine() {
+        pt++;
+        if (pt < pts.length) {
+          ctx.lineTo(pts[pt].x, pts[pt].y);
+          ctx.stroke();
+          requestAnimationFrame(stepLine);
+        } else {
+          pathIdx++;
+          setTimeout(playNextPath, 45);
+        }
+      }
+      stepLine();
+    }
+
+    playNextPath();
+  }
+
+  function resetScratch() {
+    if (!isScratched && !isScratching) return;
+    row.classList.remove('scratching');
+    row.classList.remove('scratched');
+    canvas.style.transition = 'opacity 0.3s ease';
+    drawFoil();
+    isScratched = false;
+    isScratching = false;
+  }
+
+  function spawnScratchSparks(anchorEl) {
+    const card = anchorEl.parentElement;
+    if (!card) return;
+    const colors = ['#6C63FF', '#39FF14', '#FFD60A', '#FFFFFF'];
+    for (let i = 0; i < 6; i++) {
+      const sp = document.createElement('span');
+      sp.className = 'dev-spark';
+      sp.style.left = `${15 + Math.random() * 60}%`;
+      sp.style.top = `${20 + Math.random() * 50}%`;
+      sp.style.backgroundColor = colors[i % colors.length];
+      sp.style.setProperty('--dx', `${(Math.random() - 0.5) * 36}px`);
+      sp.style.setProperty('--dy', `${-10 - Math.random() * 25}px`);
+      card.appendChild(sp);
+      setTimeout(() => sp.remove(), 550);
+    }
+  }
+
+  // ONLY ON HOVER:
+  row.addEventListener('mouseenter', () => {
+    if (resetTimer) clearTimeout(resetTimer);
+    doScratch();
+  });
+
+  row.addEventListener('mouseleave', () => {
+    resetTimer = setTimeout(() => {
+      resetScratch();
+    }, 1200);
+  });
+
+  // Mobile tap support
+  row.addEventListener('touchstart', () => {
+    doScratch();
+  }, { passive: true });
+
+  // Interactive pointer scratch support
+  let isPointerDown = false;
+  canvas.addEventListener('pointerdown', (e) => {
+    isPointerDown = true;
+    eraseAtPointer(e);
+  });
+  window.addEventListener('pointerup', () => { isPointerDown = false; });
+  canvas.addEventListener('pointermove', (e) => {
+    if (isPointerDown) {
+      eraseAtPointer(e);
+    }
+  });
+
+  function eraseAtPointer(e) {
+    const rect = canvas.getBoundingClientRect();
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(px, py, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    if (!isScratched && !isScratching) {
+      setTimeout(doScratch, 100);
+    }
+  }
 }
 
 $('searchStudent')?.addEventListener('input', renderLeaderboard);
@@ -958,11 +1157,13 @@ function renderMyStatus(enroll) {
 
   // Render Profile Header Banner
   const genderIcon = student.gender === 'F' ? '👩' : '👨';
+  const isDev = student.enroll.toUpperCase() === 'BT24CSE093';
+  const devBadge = isDev ? ` <span class="dev-revealed-label" style="margin-left:6px;vertical-align:middle;display:inline-flex;" title="Website Developer"><span class="dev-icon">👨‍💻</span><span class="dev-text">developer</span></span>` : '';
   profileCard.innerHTML = `
     <div class="profile-main">
       <div class="profile-avatar">${student.name.charAt(0)}</div>
       <div class="profile-info">
-        <div class="profile-name">${titleCase(student.name)} ${genderIcon}</div>
+        <div class="profile-name">${titleCase(student.name)} ${genderIcon}${devBadge}</div>
         <div class="profile-meta-row">
           <span class="profile-tag">${student.enroll}</span>
           <span>Rank: <strong>#${student.rank}</strong></span>

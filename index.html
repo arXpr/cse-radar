@@ -44,8 +44,14 @@
       <a href="#" class="nav-link" data-page="mystatus">My Status 🎯</a>
       <a href="#" class="nav-link" data-page="companies">Companies</a>
       <a href="#" class="nav-link" data-page="leaderboard">Leaderboard</a>
+      <a href="#" class="nav-link" data-page="sgpa">SGPA Calc 📊</a>
     </div>
     <div class="nav-auth">
+      <button class="btn-whats-new" id="whatsNewBtn" title="What's New in this update">
+        <span class="wn-icon">✨</span>
+        <span class="wn-text">What's New</span>
+        <span class="wn-badge-pulse" id="whatsNewPulse"></span>
+      </button>
       <div id="auth-guest" class="auth-state">
         <button class="btn-ghost" id="adminLoginBtn">Admin Login</button>
       </div>
@@ -229,6 +235,105 @@
 
     </div>
 
+    <!-- ── PAGE: SGPA CALCULATOR ── -->
+    <div id="page-sgpa" class="page">
+
+      <!-- Hero Header -->
+      <section class="sgpa-hero">
+        <div class="sgpa-hero-inner">
+          <div class="sgpa-hero-badge">5th Semester · CSE 2024–28</div>
+          <h1>SGPA <span class="accent">Calculator</span></h1>
+          <p class="sgpa-hero-sub">Calculate your Semester GPA and project CGPA targets · Powered for VNIT CSE Batch</p>
+        </div>
+      </section>
+
+      <!-- Identity Card -->
+      <section class="section">
+        <div class="sgpa-identity-card" id="sgpa-identity-card">
+          <div class="sgpa-identity-header">
+            <div class="sgpa-identity-icon">🎓</div>
+            <div>
+              <div class="sgpa-identity-title">Your Identity</div>
+              <div class="sgpa-identity-sub">We'll remember you for CGPA projections</div>
+            </div>
+          </div>
+          <div class="sgpa-identity-fields">
+            <div class="sgpa-field-group">
+              <label class="sgpa-label" for="sgpa-enroll-input">Enrollment Number</label>
+              <div class="sgpa-enroll-wrap">
+                <input type="text" id="sgpa-enroll-input" class="sgpa-input" placeholder="e.g. BT24CSE123" autocomplete="off" />
+                <button class="btn-primary" id="sgpa-enroll-btn">Load Profile</button>
+              </div>
+              <div id="sgpa-autocomplete" class="autocomplete-list hidden"></div>
+            </div>
+            <div class="sgpa-field-group">
+              <label class="sgpa-label" for="sgpa-cgpa-input">Current CGPA (after 4th Sem)</label>
+              <input type="number" id="sgpa-cgpa-input" class="sgpa-input" placeholder="e.g. 8.50" min="0" max="10" step="0.01" />
+              <div class="sgpa-hint">Auto-filled if enrollment found · or enter manually</div>
+            </div>
+            <div class="sgpa-field-group">
+              <label class="sgpa-label" for="sgpa-sems-done-input">Semesters Completed</label>
+              <input type="number" id="sgpa-sems-done-input" class="sgpa-input" value="4" min="1" max="7" step="1" />
+            </div>
+          </div>
+          <div id="sgpa-profile-found" class="sgpa-profile-found hidden"></div>
+        </div>
+      </section>
+
+      <!-- Subject Table -->
+      <section class="section">
+        <div class="section-header">
+          <h2>5th Semester Subjects</h2>
+          <button class="btn-accent" id="sgpa-add-subject-btn">+ Add Course</button>
+        </div>
+        <div class="sgpa-subjects-card">
+          <div class="sgpa-table-header">
+            <span>Subject</span>
+            <span>Credits</span>
+            <span>Grade Point (0–10)</span>
+            <span>Weighted</span>
+            <span></span>
+          </div>
+          <div id="sgpa-subject-rows"></div>
+        </div>
+      </section>
+
+      <!-- Result Panel -->
+      <section class="section" id="sgpa-result-section">
+        <div class="sgpa-result-card">
+          <div class="sgpa-result-main">
+            <div class="sgpa-result-item">
+              <div class="sgpa-result-label">Total Credits</div>
+              <div class="sgpa-result-val" id="sgpa-total-credits">—</div>
+            </div>
+            <div class="sgpa-result-item">
+              <div class="sgpa-result-label">Weighted Sum</div>
+              <div class="sgpa-result-val" id="sgpa-weighted-sum">—</div>
+            </div>
+            <div class="sgpa-result-item highlight">
+              <div class="sgpa-result-label">Your SGPA</div>
+              <div class="sgpa-result-val accent-val" id="sgpa-value">—</div>
+            </div>
+          </div>
+          <!-- CGPA Projector -->
+          <div class="sgpa-projector" id="sgpa-projector">
+            <div class="sgpa-proj-title">📈 CGPA Projector</div>
+            <div class="sgpa-proj-current" id="sgpa-proj-current"></div>
+            <div class="sgpa-proj-targets" id="sgpa-proj-targets"></div>
+            <div class="sgpa-proj-goal">
+              <label class="sgpa-label" for="sgpa-target-cgpa">Target CGPA</label>
+              <div class="sgpa-goal-row">
+                <input type="number" id="sgpa-target-cgpa" class="sgpa-input small" placeholder="e.g. 9.0" min="0" max="10" step="0.01" />
+                <button class="btn-primary small" id="sgpa-calc-target-btn">What do I need?</button>
+              </div>
+              <div id="sgpa-target-result" class="sgpa-target-result"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
   </main>
 
   <!-- ═══════════════════════════════════════════
@@ -294,6 +399,57 @@
     </div>
   </div>
 
+  <!-- ═══════════════════════════════════════════
+     NEW UPDATE POPUP (What's New)
+════════════════════════════════════════════ -->
+  <div id="update-popup" class="update-popup hidden" role="dialog" aria-modal="false" aria-labelledby="update-title">
+    <div class="update-popup-card">
+      <button class="update-close-btn" id="updateCloseBtn" aria-label="Close update popup">✕</button>
+      
+      <div class="update-header">
+        <span class="update-pill">✨ NEW UPDATE</span>
+        <span class="update-version">v2.1 · 5th Sem</span>
+      </div>
+
+      <div class="update-body">
+        <div class="update-title-row">
+          <span class="update-icon">📊</span>
+          <div>
+            <h3 class="update-title" id="update-title">SGPA Calculator is Live!</h3>
+            <p class="update-subtitle">Tailored for CSE 2024–28 · 5th Semester</p>
+          </div>
+        </div>
+
+        <ul class="update-features">
+          <li>
+            <span class="uf-bullet">⚡</span>
+            <span><strong>Default 5th Sem Courses:</strong> DAA (5cr), NFT, CN, TOC, OS (4cr each).</span>
+          </li>
+          <li>
+            <span class="uf-bullet">🎛️</span>
+            <span><strong>Electives & Custom Courses:</strong> Toggle IPU / Steganography or add custom courses.</span>
+          </li>
+          <li>
+            <span class="uf-bullet">🎯</span>
+            <span><strong>Target CGPA Projector:</strong> Instant SGPA target based on your past CGPA!</span>
+          </li>
+          <li>
+            <span class="uf-bullet">💾</span>
+            <span><strong>Auto-Saved:</strong> Remembers your enrollment ID and calculated grades.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="update-footer">
+        <button class="btn-update-cta" id="updateCtaBtn">
+          <span>Try SGPA Calc</span>
+          <span class="cta-arrow">→</span>
+        </button>
+        <button class="btn-update-dismiss" id="updateDismissBtn">Got it</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Overlay -->
   <div id="overlay" class="overlay hidden"></div>
 
@@ -303,6 +459,8 @@
   <script src="data/students.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/sgpa.js"></script>
+  <script src="js/updates.js"></script>
 
 </body>
 
