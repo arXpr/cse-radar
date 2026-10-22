@@ -73,9 +73,20 @@ service cloud.firestore {
       // Only authenticated users can write (app checks admin email on top)
       allow write: if request.auth != null;
     }
+    // Stores the public list of students recognized as TNP Heads.
+    match /appConfig/{configId} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.token.email in [
+          "aryapratikunofficial@gmail.com",
+          "aryapratikofficial@gmail.com"
+        ];
+    }
   }
 }
 ```
+
+The app stores TNP Head designations in `appConfig/recognitions`. If your Firestore rules are already deployed, add the `appConfig` match above before saving designations in the app. Keep its email list in sync with `ADMIN_EMAILS` in `js/firebase-config.js`.
 
 ## Step 4 — Deploy to GitHub Pages
 

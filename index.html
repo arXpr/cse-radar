@@ -168,7 +168,10 @@
       <section class="section">
         <div class="section-header">
           <h2>CSE Batch Leaderboard</h2>
-          <div class="filter-row">
+          <div class="filter-row leaderboard-controls">
+            <div id="tnp-head-admin-controls" class="hidden">
+              <button class="btn-ghost" id="manageTnpHeadsBtn">★ Manage TNP Heads</button>
+            </div>
             <input type="text" id="searchStudent" placeholder="Search name / enroll..." class="input-search" />
             <select id="filterBy" class="input-select">
               <option value="rank">Sort by Rank</option>
@@ -395,6 +398,21 @@
       <div class="modal-actions">
         <button class="btn-ghost" id="cancelRoundBtn">Cancel</button>
         <button class="btn-primary" id="saveRoundBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage TNP Head Recognition -->
+  <div id="modal-tnp-heads" class="modal hidden">
+    <div class="modal-box wide">
+      <div class="modal-title">Recognize TNP Heads</div>
+      <p class="modal-hint">Select one or more students to display a TNP Head appreciation badge across the app.</p>
+      <input type="text" id="tnp-head-search" placeholder="Search name or enrollment..." class="modal-input" />
+      <div id="tnp-head-list" class="round-student-list tnp-head-list"></div>
+      <p id="tnp-head-error" class="tnp-head-error hidden" role="alert"></p>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="cancelTnpHeadsBtn">Cancel</button>
+        <button class="btn-primary" id="saveTnpHeadsBtn">Save TNP Heads</button>
       </div>
     </div>
   </div>

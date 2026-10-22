@@ -11,6 +11,9 @@ let editingCompanyId = null;        // null = adding new, string = editing exist
 let currentRoundIdx = null;         // which round modal is open for
 let roundModalSelected = new Set(); // student enrolls selected in round modal
 let roundModalWaiting = new Set();  // OA students tagged as waiting-list candidates
+let tnpHeadEnrolls = new Set();
+let tnpHeadModalSelected = new Set();
+let tnpHeadsLoaded = false;
 
 // ── INDEPENDENCE DAY THEME (TEMPORARY Aug 12-20) ───
 function initIndependenceTheme() {
@@ -182,7 +185,9 @@ auth.onAuthStateChanged(user => {
   $('auth-admin').classList.toggle('hidden', !user);
   $('admin-controls').classList.toggle('hidden', !currentAdmin);
   $('admin-edit-controls').classList.toggle('hidden', !currentAdmin);
+  $('tnp-head-admin-controls').classList.toggle('hidden', !currentAdmin);
 
+  if (!tnpHeadsLoaded) loadTnpHeads();
   loadCompanies();
 });
 
@@ -219,6 +224,16 @@ function loadCompanies() {
       if (updated) showCompanyDetail(updated);
     }
   }, err => console.error('Firestore error:', err));
+}
+
+function loadTnpHeads() {
+  tnpHeadsLoaded = true;
+  db.collection('appConfig').doc('recognitions').onSnapshot(doc => {
+    tnpHeadEnrolls = new Set(doc.exists ? doc.data().tnpHeads || [] : []);
+    if ($('page-leaderboard')?.classList.contains('active')) renderLeaderboard();
+    if ($('page-mystatus')?.classList.contains('active')) renderMyStatusFromInput();
+    if (currentCompany) showCompanyDetail(currentCompany);
+  }, err => console.error('TNP Head data error:', err));
 }
 
 // ── DASHBOARD ──────────────────────────────────────
@@ -447,9 +462,13 @@ function renderRoundTables(co) {
 
     let chipsHTML = '';
     students.forEach(s => {
+      const roleBadge = tnpHeadEnrolls.has(s.enroll)
+        ? '<span class="tnp-head-badge" title="TNP Head">★ TNP HEAD</span>'
+        : '';
       chipsHTML += `<div class="student-chip">
         <span class="chip-rank">#${s.rank||'?'}</span>
         <span class="chip-name" title="${s.name}">${s.name}</span>
+        ${roleBadge}
         ${waitingStudents.has(s.enroll) ? '<span class="waitlist-badge" title="Waiting-list candidate">W</span>' : ''}
         ${s.cgpa ? `<span class="chip-cgpa">${s.cgpa.toFixed(2)}</span>` : ''}
       </div>`;
@@ -664,6 +683,67 @@ $('saveRoundBtn').addEventListener('click', async () => {
   closeModal('modal-round');
 });
 
+// ── TNP HEAD RECOGNITION ───────────────────────────
+function openTnpHeadModal() {
+  if (!currentAdmin) return;
+  tnpHeadModalSelected = new Set(tnpHeadEnrolls);
+  $('tnp-head-search').value = '';
+  $('tnp-head-error').classList.add('hidden');
+  renderTnpHeadList('');
+  openModal('modal-tnp-heads');
+}
+
+function renderTnpHeadList(query) {
+  const q = query.trim().toLowerCase();
+  const students = CSE_STUDENTS.filter(s =>
+    !q || s.name.toLowerCase().includes(q) || s.enroll.toLowerCase().includes(q)
+  );
+
+  $('tnp-head-list').innerHTML = students.map(s => {
+    const isTnpHead = tnpHeadModalSelected.has(s.enroll);
+    return `<div class="tnp-head-row">
+      <div class="tnp-head-student">
+        <span class="rs-name">${titleCase(s.name)}</span>
+        <span class="rs-enroll">${s.enroll}</span>
+      </div>
+      <button type="button" class="btn-ghost small ${isTnpHead ? 'tnp-head-remove' : ''}" data-enroll="${s.enroll}">
+        ${isTnpHead ? '★ TNP Head' : 'Mark TNP Head'}
+      </button>
+    </div>`;
+  }).join('');
+
+  $('tnp-head-list').querySelectorAll('button[data-enroll]').forEach(button => {
+    button.addEventListener('click', () => {
+      const enroll = button.dataset.enroll;
+      if (tnpHeadModalSelected.has(enroll)) {
+        tnpHeadModalSelected.delete(enroll);
+      } else {
+        tnpHeadModalSelected.add(enroll);
+      }
+      renderTnpHeadList(query);
+    });
+  });
+}
+
+$('manageTnpHeadsBtn').addEventListener('click', openTnpHeadModal);
+$('tnp-head-search').addEventListener('input', e => renderTnpHeadList(e.target.value));
+$('cancelTnpHeadsBtn').addEventListener('click', () => closeModal('modal-tnp-heads'));
+$('saveTnpHeadsBtn').addEventListener('click', async () => {
+  if (!currentAdmin) return;
+  const errorEl = $('tnp-head-error');
+  errorEl.classList.add('hidden');
+  try {
+    await db.collection('appConfig').doc('recognitions').set({
+      tnpHeads: [...tnpHeadModalSelected],
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    closeModal('modal-tnp-heads');
+  } catch (error) {
+    errorEl.textContent = `Could not save TNP Heads: ${error.message}`;
+    errorEl.classList.remove('hidden');
+  }
+});
+
 // ── LEADERBOARD ────────────────────────────────────
 function renderLeaderboard() {
   const query   = ($('searchStudent')?.value || '').toLowerCase();
@@ -735,11 +815,14 @@ function renderLeaderboard() {
         <canvas class="dev-foil-canvas" id="arya-foil-canvas" width="94" height="20" aria-hidden="true"></canvas>
       </span>
     ` : '';
+    const tnpHeadBadgeHTML = tnpHeadEnrolls.has(s.enroll)
+      ? '<span class="tnp-head-badge" title="Recognized TNP Head">★ TNP HEAD</span>'
+      : '';
 
     return `<div class="${rowClass}" ${rowIdAttr}>
       <div class="lb-rank">${s.rank}</div>
       <div class="lb-name-wrap">
-        <div class="lb-name">${titleCase(s.name)}${devBadgeHTML}</div>
+        <div class="lb-name">${titleCase(s.name)}${devBadgeHTML}${tnpHeadBadgeHTML}</div>
         <div class="lb-enroll">${s.enroll}</div>
       </div>
       <div class="lb-cgpa">${s.cgpa ? s.cgpa.toFixed(4) : '—'}</div>
@@ -945,11 +1028,11 @@ function openModal(id) {
 function closeModal(id) {
   $(id).classList.add('hidden');
   // close overlay only if no other modals open
-  const anyOpen = ['modal-login','modal-company','modal-round'].some(m => !$(m).classList.contains('hidden'));
+  const anyOpen = ['modal-login','modal-company','modal-round','modal-tnp-heads'].some(m => !$(m).classList.contains('hidden'));
   if (!anyOpen) $('overlay').classList.add('hidden');
 }
 $('overlay').addEventListener('click', () => {
-  ['modal-login','modal-company','modal-round'].forEach(id => $(id).classList.add('hidden'));
+  ['modal-login','modal-company','modal-round','modal-tnp-heads'].forEach(id => $(id).classList.add('hidden'));
   $('overlay').classList.add('hidden');
 });
 
@@ -1189,11 +1272,14 @@ function renderMyStatus(enroll) {
   const genderIcon = student.gender === 'F' ? '👩' : '👨';
   const isDev = student.enroll.toUpperCase() === 'BT24CSE093';
   const devBadge = isDev ? ` <span class="dev-revealed-label" style="margin-left:6px;vertical-align:middle;display:inline-flex;" title="Website Developer"><span class="dev-icon">👨‍💻</span><span class="dev-text">developer</span></span>` : '';
+  const tnpHeadBadge = tnpHeadEnrolls.has(student.enroll)
+    ? ' <span class="tnp-head-badge" title="Recognized TNP Head">★ TNP HEAD</span>'
+    : '';
   profileCard.innerHTML = `
     <div class="profile-main">
       <div class="profile-avatar">${student.name.charAt(0)}</div>
       <div class="profile-info">
-        <div class="profile-name">${titleCase(student.name)} ${genderIcon}${devBadge}</div>
+        <div class="profile-name">${titleCase(student.name)} ${genderIcon}${devBadge}${tnpHeadBadge}</div>
         <div class="profile-meta-row">
           <span class="profile-tag">${student.enroll}</span>
           <span>Rank: <strong>#${student.rank}</strong></span>

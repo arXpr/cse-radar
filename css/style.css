@@ -493,6 +493,21 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
 .round-badge.green { color: var(--green); border-color: rgba(57,255,20,0.3); background: var(--green-dim); }
 .round-badge.red   { color: var(--red);   border-color: rgba(255,68,68,0.3); background: var(--red-dim); }
 .round-badge.acc   { color: var(--accent); border-color: rgba(108,99,255,0.3); background: var(--accent-glow); }
+.tnp-head-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border: 1px solid rgba(255, 193, 7, 0.42);
+  border-radius: 12px;
+  background: rgba(255, 193, 7, 0.12);
+  color: #ffc107;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
 .waitlist-badge {
   flex-shrink: 0;
   padding: 1px 6px;
@@ -815,6 +830,22 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
 .rs-name { flex: 1; font-size: 0.875rem; font-weight: 500; }
 .rs-enroll { font-family: var(--mono); font-size: 0.72rem; color: var(--text-muted); }
 .rs-cgpa { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); }
+.tnp-head-list { max-height: 380px; }
+.tnp-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-3);
+}
+.tnp-head-student { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tnp-head-student .rs-name { overflow-wrap: anywhere; }
+.tnp-head-remove { color: #ffc107; border-color: rgba(255, 193, 7, 0.4); }
+.tnp-head-error { margin-top: 0.75rem; color: var(--red); font-size: 0.85rem; }
+.leaderboard-controls { flex-wrap: wrap; justify-content: flex-end; }
 
 /* ══════════════════════════════════════════
    EMPTY STATE
@@ -2260,4 +2291,3 @@ body.independence-theme .btn-primary:hover {
     transform: translate(var(--dx), var(--dy)) scale(0);
   }
 }
-
