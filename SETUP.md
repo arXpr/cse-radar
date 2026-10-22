@@ -28,11 +28,13 @@ Firebase Firestore
               ├── branches: ["CSE", "ECE"]
               ├── eligibleCount: 18
               └── rounds: [
-                    { name: "OA",       students: ["BT24CSE123", "BT24CSE051", ...] },
+                    { name: "OA",       students: ["BT24CSE123", "BT24CSE051", ...], waitingStudents: ["BT24CSE051"] },
                     { name: "Round 1",  students: ["BT24CSE123", ...] },
                     { name: "Final HR", students: ["BT24CSE123"] }
                   ]
 ```
+
+`waitingStudents` is an optional list on the first (OA) round. It contains enrollment numbers already in that round's `students` list and marks them with a **W** badge; it does not add a later-round pass or offer.
 
 ## Step 1 — Firebase Setup
 
@@ -110,7 +112,8 @@ git push -u origin main
 3. Per round, click **Edit Students** button
 4. A searchable list of all 124 CSE students appears
 5. Select students who cleared that round → Save
-6. Funnel diagram updates live
+6. While editing the first (OA) round, use **W** to mark a selected student as waiting-list
+7. Funnel diagram updates live
 
 ## Adding Non-CSE Students
 

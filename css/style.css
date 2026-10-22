@@ -493,6 +493,17 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
 .round-badge.green { color: var(--green); border-color: rgba(57,255,20,0.3); background: var(--green-dim); }
 .round-badge.red   { color: var(--red);   border-color: rgba(255,68,68,0.3); background: var(--red-dim); }
 .round-badge.acc   { color: var(--accent); border-color: rgba(108,99,255,0.3); background: var(--accent-glow); }
+.waitlist-badge {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border: 1px solid rgba(255, 193, 7, 0.45);
+  border-radius: 10px;
+  background: rgba(255, 193, 7, 0.12);
+  color: #ffc107;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
 
 .round-student-grid {
   display: grid;
@@ -786,6 +797,20 @@ main { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
   transition: all 0.15s;
 }
 .rs-item.selected .rs-check { background: var(--green); border-color: var(--green); color: #000; }
+.rs-wait-toggle {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border: 1px solid rgba(255, 193, 7, 0.45);
+  border-radius: 10px;
+  background: transparent;
+  color: #ffc107;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rs-wait-toggle:hover,
+.rs-wait-toggle.active { background: rgba(255, 193, 7, 0.16); }
 
 .rs-name { flex: 1; font-size: 0.875rem; font-weight: 500; }
 .rs-enroll { font-family: var(--mono); font-size: 0.72rem; color: var(--text-muted); }
@@ -2235,5 +2260,4 @@ body.independence-theme .btn-primary:hover {
     transform: translate(var(--dx), var(--dy)) scale(0);
   }
 }
-
 

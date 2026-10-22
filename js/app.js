@@ -10,6 +10,7 @@ let currentCompany  = null;         // company being viewed in detail
 let editingCompanyId = null;        // null = adding new, string = editing existing
 let currentRoundIdx = null;         // which round modal is open for
 let roundModalSelected = new Set(); // student enrolls selected in round modal
+let roundModalWaiting = new Set();  // OA students tagged as waiting-list candidates
 
 // ── INDEPENDENCE DAY THEME (TEMPORARY Aug 12-20) ───
 function initIndependenceTheme() {
@@ -437,6 +438,7 @@ function renderRoundTables(co) {
              || { name: enroll, enroll, rank: null, cgpa: null, branch: '?' };
       return s;
     }).sort((a,b) => (a.rank||999) - (b.rank||999));
+    const waitingStudents = new Set(idx === 0 ? round.waitingStudents || [] : []);
 
     const prev = idx > 0 ? (co.rounds[idx-1].students||[]).length : (co.eligibleCount||0);
     const cleared = students.length;
@@ -448,6 +450,7 @@ function renderRoundTables(co) {
       chipsHTML += `<div class="student-chip">
         <span class="chip-rank">#${s.rank||'?'}</span>
         <span class="chip-name" title="${s.name}">${s.name}</span>
+        ${waitingStudents.has(s.enroll) ? '<span class="waitlist-badge" title="Waiting-list candidate">W</span>' : ''}
         ${s.cgpa ? `<span class="chip-cgpa">${s.cgpa.toFixed(2)}</span>` : ''}
       </div>`;
     });
@@ -534,10 +537,14 @@ $('saveCompanyBtn').addEventListener('click', async () => {
     const existingRounds = existing?.rounds || [];
     newRounds = roundNames.map((rName, idx) => {
       const old = existingRounds.find(r => r.name === rName) || existingRounds[idx];
-      return { name: rName, students: old?.students || [] };
+      return {
+        name: rName,
+        students: old?.students || [],
+        waitingStudents: old?.waitingStudents || []
+      };
     });
   } else {
-    newRounds = roundNames.map(rName => ({ name: rName, students: [] }));
+    newRounds = roundNames.map(rName => ({ name: rName, students: [], waitingStudents: [] }));
   }
 
   const data = {
@@ -565,12 +572,16 @@ function openRoundModal(roundIdx) {
   currentRoundIdx = roundIdx;
   const round = currentCompany.rounds[roundIdx];
   $('modal-round-title').textContent = `Manage: ${round.name}`;
+  $('round-modal-hint').innerHTML = roundIdx === 0
+    ? 'Select students who <strong>cleared OA</strong>. Use the W button to mark a waiting-list candidate.'
+    : 'Select students who <strong>cleared</strong> this round';
 
-  roundModalSelected = new Set(round.students || []);
+  roundModalWaiting = new Set(roundIdx === 0 ? round.waitingStudents || [] : []);
+  roundModalSelected = new Set([...(round.students || []), ...roundModalWaiting]);
   renderRoundStudentList('');
 
   $('round-student-search').value = '';
-  $('round-student-search').addEventListener('input', e => renderRoundStudentList(e.target.value));
+  $('round-student-search').oninput = e => renderRoundStudentList(e.target.value);
 
   openModal('modal-round');
 }
@@ -595,11 +606,15 @@ function renderRoundStudentList(query) {
 
   list.innerHTML = students.map(s => {
     const sel = roundModalSelected.has(s.enroll);
+    const isWaiting = currentRoundIdx === 0 && roundModalWaiting.has(s.enroll);
     return `<div class="rs-item ${sel ? 'selected' : ''}" data-enroll="${s.enroll}">
       <div class="rs-check">${sel ? '✓' : ''}</div>
       <span class="rs-name">${s.name}</span>
       <span class="rs-enroll">${s.enroll}</span>
       ${s.cgpa ? `<span class="rs-cgpa">${s.cgpa.toFixed(2)}</span>` : ''}
+      ${currentRoundIdx === 0
+        ? `<button type="button" class="rs-wait-toggle ${isWaiting ? 'active' : ''}" aria-pressed="${isWaiting}" title="Mark as waiting-list candidate">W</button>`
+        : ''}
     </div>`;
   }).join('');
 
@@ -608,13 +623,25 @@ function renderRoundStudentList(query) {
       const enroll = item.dataset.enroll;
       if (roundModalSelected.has(enroll)) {
         roundModalSelected.delete(enroll);
-        item.classList.remove('selected');
-        item.querySelector('.rs-check').textContent = '';
+        roundModalWaiting.delete(enroll);
       } else {
         roundModalSelected.add(enroll);
-        item.classList.add('selected');
-        item.querySelector('.rs-check').textContent = '✓';
       }
+      renderRoundStudentList(query);
+    });
+  });
+
+  list.querySelectorAll('.rs-wait-toggle').forEach(button => {
+    button.addEventListener('click', e => {
+      e.stopPropagation();
+      const enroll = button.closest('.rs-item').dataset.enroll;
+      roundModalSelected.add(enroll);
+      if (roundModalWaiting.has(enroll)) {
+        roundModalWaiting.delete(enroll);
+      } else {
+        roundModalWaiting.add(enroll);
+      }
+      renderRoundStudentList(query);
     });
   });
 }
@@ -627,7 +654,10 @@ $('saveRoundBtn').addEventListener('click', async () => {
   const rounds = [...currentCompany.rounds];
   rounds[currentRoundIdx] = {
     ...rounds[currentRoundIdx],
-    students: [...roundModalSelected]
+    students: [...roundModalSelected],
+    waitingStudents: currentRoundIdx === 0
+      ? [...roundModalWaiting]
+      : rounds[currentRoundIdx].waitingStudents || []
   };
 
   await db.collection('companies').doc(currentCompany.id).update({ rounds });
